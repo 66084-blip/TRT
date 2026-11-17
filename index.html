@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOOP LINE TYCOON ∞ (環状鉄道タイクーン∞)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden;
+      background-color: #02050e;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Strict Single-Screen Grid & Anti-Expansion Containment */
+    .app-shell {
+      display: grid;
+      grid-template-rows: 54px minmax(0, 1fr);
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(290px, 340px) minmax(0, 1fr) minmax(300px, 355px);
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    @media (max-width: 1080px) {
+      .main-grid {
+        grid-template-columns: minmax(255px, 290px) minmax(0, 1fr) minmax(265px, 305px);
+      }
+    }
+
+    .left-panel, .center-panel, .right-panel {
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .mult-chain-box {
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .mult-chain-box::-webkit-scrollbar {
+      display: none;
+    }
+
+    .line-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: stretch;
+      gap: 4px;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Futuristic Holographic Panels */
+    .holo-panel {
+      background: linear-gradient(160deg, rgba(10, 18, 38, 0.94) 0%, rgba(4, 9, 22, 0.97) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      box-shadow: inset 0 0 22px rgba(14, 165, 233, 0.08), 0 8px 24px rgba(0, 0, 0, 0.65);
+    }
+
+    .cyber-corner {
+      position: relative;
+    }
+    .cyber-corner::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 10px;
+      height: 10px;
+      border-top: 2px solid #38bdf8;
+      border-left: 2px solid #38bdf8;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .cyber-corner::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 10px;
+      height: 10px;
+      border-bottom: 2px solid #38bdf8;
+      border-right: 2px solid #38bdf8;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .scanline-overlay {
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0px,
+        rgba(255, 255, 255, 0) 3px,
+        rgba(56, 189, 248, 0.03) 4px
+      );
+      pointer-events: none;
+    }
+
+    .line-btn {
+      min-width: 0;
+      overflow: hidden;
+      transition: transform 0.06s ease, filter 0.12s ease;
+    }
+    .line-btn:active:not(:disabled) {
+      transform: scale(0.985);
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(2, 6, 23, 0.6);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.35);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="app-shell">
+
+  <!-- TOP 54PX TELEMETRY HUD -->
+  <header class="h-[54px] w-full max-w-full min-w-0 holo-panel border-x-0 border-t-0 px-2.5 flex items-center justify-between gap-2 z-30 overflow-hidden">
+    <!-- Brand -->
+    <div class="flex items-center gap-2 shrink-0">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_12px_rgba(34,211,238,0.25)]">
+        <svg class="w-4 h-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+        </svg>
+      </div>
+      <div class="leading-tight hidden sm:block">
+        <div class="text-[11px] font-black tracking-wider text-cyan-300">LOOP LINE TYCOON ∞</div>
+        <div class="text-[9px] text-slate-400 font-bold tracking-widest">環状鉄道指令室 // NEO-CENTRAL</div>
+      </div>
+    </div>
+
+    <!-- Live Multiplier Equation Bar -->
+    <div class="mult-chain-box flex-1 min-w-0 bg-[#030712]/95 border border-cyan-500/30 rounded-lg px-2 py-1 flex items-center gap-1">
+      <span class="text-[10px] font-black text-cyan-400 shrink-0">(</span>
+      <div id="ui-mult-bar" class="flex items-center gap-1 shrink-0"></div>
+      <span class="text-[10px] font-black text-cyan-400 shrink-0">)</span>
+      <span class="text-[10px] font-black text-amber-400 shrink-0">^<span id="ui-common-exp" class="mono">1.00</span></span>
+      <span class="text-[10px] text-slate-500 shrink-0">=</span>
+      <span id="ui-total-payout" class="mono text-[11px] font-black text-emerald-300 shrink-0">¥1.00</span>
+      <span class="text-[9px] text-slate-400 shrink-0">/周</span>
+    </div>
+
+    <!-- Right: Score + Infinity Gauge + Navigation -->
+    <div class="flex items-center gap-1.5 shrink-0">
+      <div class="bg-[#030712]/95 border border-emerald-500/40 rounded-lg px-2 py-0.5 w-[162px] shrink-0 overflow-hidden">
+        <div class="flex items-center justify-between gap-1 min-w-0">
+          <span id="ui-score" class="mono text-xs font-black text-emerald-400 truncate">¥4.00</span>
+          <span id="ui-cap-tag" class="hidden text-[8px] px-1 rounded bg-purple-500/30 text-purple-200 border border-purple-400/60 font-black shrink-0">CAP</span>
+          <span class="mono text-[9px] font-black text-purple-300 bg-purple-950/80 border border-purple-500/40 px-1 rounded shrink-0">
+            <span id="ui-header-inf">0</span>∞/<span id="ui-header-ip">0</span>IP
+          </span>
+        </div>
+        <div class="w-full h-1 bg-slate-900 rounded-full overflow-hidden mt-0.5 border border-slate-800" title="インフィニティ (1.80e308) 到達ゲージ">
+          <div id="ui-inf-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 transition-all duration-150" style="width: 0.2%;"></div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-slate-950/90 p-1 rounded-lg border border-slate-800 shrink-0">
+        <button onclick="switchTab('ops')" id="tab-btn-ops" class="tab-btn px-2 py-1 rounded text-[10px] font-black transition bg-cyan-500/20 text-cyan-300 border border-cyan-400/50">
+          経営
+        </button>
+        <button onclick="switchTab('inf')" id="tab-btn-inf" class="tab-btn px-2 py-1 rounded text-[10px] font-black transition text-slate-400 hover:text-white border border-transparent">
+          ∞/IC
+        </button>
+        <button onclick="switchTab('ach')" id="tab-btn-ach" class="tab-btn px-2 py-1 rounded text-[10px] font-black transition text-slate-400 hover:text-white border border-transparent">
+          実績<span id="ui-ach-count" class="ml-0.5 text-[9px] text-amber-300">0/28</span>
+        </button>
+        <button onclick="switchTab('sys')" id="tab-btn-sys" class="tab-btn px-2 py-1 rounded text-[10px] font-black transition text-slate-400 hover:text-white border border-transparent">
+          設定
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 3-COLUMN SINGLE-SCREEN WORKSPACE -->
+  <main class="main-grid gap-2 p-2">
+
+    <!-- LEFT COLUMN: 10 RAILWAY LINE UPGRADE DECK -->
+    <section class="left-panel h-full holo-panel cyber-corner rounded-xl p-2 flex flex-col gap-1.5">
+      <div class="flex items-center justify-between gap-1 pb-1.5 border-b border-cyan-500/25 shrink-0 min-w-0">
+        <div class="flex items-center gap-1 min-w-0">
+          <span class="text-[10px] font-black tracking-wider text-cyan-300 truncate">環状路線網</span>
+          <span id="ui-unlocked-count" class="mono text-[9px] px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/30 text-cyan-200 shrink-0">1/10</span>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <!-- Buy Amount Selector (Unlocked by Ach #4) -->
+          <button id="btn-buy-amount" onclick="cycleBuyAmount()" class="hidden px-2 py-1 rounded bg-white text-slate-950 font-black text-[10px] shadow hover:bg-slate-200 transition">
+            購入:1
+          </button>
+          <!-- Buy All Button (Unlocked at 1,000,000 score) -->
+          <button id="btn-buy-all" onclick="buyAllLines()" disabled class="px-2 py-1 rounded bg-emerald-600/30 text-emerald-200/50 border border-emerald-500/30 font-black text-[10px] transition">
+            全て購入 (100万)
+          </button>
+          <!-- Ascend All Button -->
+          <button id="btn-ascend-all" onclick="ascendAllLines()" class="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-400/50 font-black text-[10px] transition">
+            一括A
+          </button>
+        </div>
+      </div>
+
+      <!-- 10 Fixed-Height Non-Expanding Micro-Cards -->
+      <div id="ui-lines-list" class="flex-1 min-h-0 min-w-0 grid grid-rows-10 gap-1 overflow-y-auto overflow-x-hidden pr-0.5"></div>
+    </section>
+
+    <!-- CENTER COLUMN: NEO-CENTRAL TERMINAL HOLOGRAPHIC RADAR -->
+    <section class="center-panel h-full holo-panel cyber-corner rounded-xl p-2 flex flex-col gap-1.5">
+      <div id="canvas-wrapper" class="canvas-wrap bg-[#02050d] rounded-lg border border-cyan-500/30 flex items-center justify-center">
+        <div class="absolute inset-0 scanline-overlay z-10"></div>
+        <canvas id="railway-canvas" class="block w-full h-full"></canvas>
+
+        <!-- Top-Left Overlay Telemetry -->
+        <div class="absolute top-2 left-2 z-20 pointer-events-none bg-slate-950/80 border border-cyan-500/30 rounded-lg px-2.5 py-1 backdrop-blur-sm">
+          <div class="text-[9px] text-cyan-400 font-black tracking-widest">SYSTEM TELEMETRY</div>
+          <div class="mono text-[11px] font-black text-emerald-300">+<span id="ui-rev-rate">¥0.20</span>/rev</div>
+          <div class="mono text-[9px] text-slate-400">総周回数: <span id="ui-total-laps" class="text-slate-200">0</span></div>
+        </div>
+
+        <!-- Top-Right Active IC Banner -->
+        <div id="ui-active-ic-badge" class="hidden absolute top-2 right-2 z-20 bg-rose-950/90 border border-rose-500/70 rounded-lg px-2.5 py-1 text-right">
+          <div class="text-[9px] font-black text-rose-300 tracking-wider">CHALLENGE ACTIVE</div>
+          <div id="ui-active-ic-name" class="text-[11px] font-black text-white">IC1</div>
+        </div>
+
+        <!-- Bottom Infinity Reached Action Banner -->
+        <div id="ui-infinity-ready-banner" class="hidden absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20">
+          <button onclick="triggerInfinity()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-[0_0_24px_rgba(192,38,211,0.75)] border border-purple-200 animate-pulse">
+            ∞ インフィニティ到達！無限の力を獲得 (+<span id="ui-banner-ip">1</span> IP)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT COLUMN: COMMAND DECK TABS -->
+    <section class="right-panel h-full holo-panel cyber-corner rounded-xl p-2.5 flex flex-col">
+
+      <!-- TAB 1: PRESTIGE & PROMOTION -->
+      <div id="tab-content-ops" class="tab-pane flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto custom-scroll pr-0.5">
+        <!-- Prestige Box -->
+        <div class="rounded-xl bg-slate-950/90 border border-sky-500/35 p-2.5 flex flex-col gap-1.5 shrink-0">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs font-black text-sky-300 flex items-center gap-1.5">
+                <span>自己破産 (プレステージ)</span>
+                <span class="mono text-[9px] px-1.5 py-0.5 rounded bg-sky-950 border border-sky-500/40 text-sky-200">累計: <span id="ui-prestige-count">0</span>回</span>
+              </div>
+              <div class="text-[10px] text-slate-400">累計スコア 1.00e10 で解放。進行をリセットし恒久倍率を獲得。</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5 bg-slate-900/80 rounded-lg p-2 border border-slate-800">
+            <div>
+              <div class="text-[9px] text-slate-400 font-bold">P.倍率 (11番目グレー)</div>
+              <div class="mono text-xs font-black text-slate-200">
+                ×<span id="ui-pmult-cur">1.00</span>
+                <span class="text-emerald-400 text-[10px]"> → ×<span id="ui-pmult-next">1.00</span></span>
+              </div>
+            </div>
+            <div>
+              <div class="text-[9px] text-slate-400 font-bold">P.指数 (共通指数)</div>
+              <div class="mono text-xs font-black text-amber-300">
+                ^<span id="ui-pexp-cur">1.00</span>
+                <span class="text-emerald-400 text-[10px]"> → ^<span id="ui-pexp-next">1.00</span></span>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-prestige" onclick="doPrestige()" disabled
+            class="w-full py-2 px-3 rounded-lg bg-slate-800/70 text-slate-500 border border-slate-700 font-black text-xs transition">
+            累計 1.00e10 で解放 (現在: ¥4.00)
+          </button>
+        </div>
+
+        <!-- Promotion Box -->
+        <div class="rounded-xl bg-slate-950/90 border border-amber-500/35 p-2.5 flex-1 min-h-0 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between shrink-0">
+            <div>
+              <div class="text-xs font-black text-amber-300">ダイヤ改正 (プロモーション)</div>
+              <div id="ui-promo-unlock-hint" class="text-[10px] text-slate-400">P.倍率 ×13,319 (Exp 8) 到達で解放</div>
+            </div>
+            <div class="text-right mono text-[10px]">
+              <div class="text-amber-200 font-black">Exp: <span id="ui-promo-exp">0</span> <span class="text-emerald-400">(+<span id="ui-promo-exp-gain">0</span>)</span></div>
+              <div class="text-[9px] text-slate-400">実行回数: <span id="ui-promo-count">0</span></div>
+            </div>
+          </div>
+
+          <div id="ui-promo-list" class="flex-1 min-h-0 flex flex-col gap-1.5 overflow-y-auto custom-scroll"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: INFINITY & CHALLENGES -->
+      <div id="tab-content-inf" class="tab-pane hidden flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto custom-scroll pr-0.5">
+        <!-- Infinity Header Card -->
+        <div class="rounded-xl bg-gradient-to-br from-purple-950/80 to-slate-950 border border-purple-500/40 p-2.5 flex flex-col gap-1.5 shrink-0">
+          <div class="flex items-center justify-between">
+            <div class="text-xs font-black text-purple-300">∞ インフィニティ & ブレイク</div>
+            <div class="mono text-xs font-black text-fuchsia-300"><span id="ui-inf-count">0</span> ∞ / <span id="ui-ip-amount">0</span> IP</div>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-[10px] mono bg-slate-950/70 p-1.5 rounded-lg border border-purple-500/20">
+            <div>最速∞タイム: <span id="ui-fastest-inf" class="text-cyan-300 font-bold">--</span></div>
+            <div>IC総クリア時間: <span id="ui-ic-total-time" class="text-amber-300 font-bold">--</span></div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button id="btn-manual-infinity" onclick="triggerInfinity()" disabled
+              class="flex-1 py-1.5 px-2 rounded-lg bg-purple-900/40 text-purple-300/50 border border-purple-500/30 font-black text-[11px] transition">
+              1.80e308 でインフィニティ
+            </button>
+            <button id="btn-break-infinity" onclick="toggleBreakInfinity()" disabled
+              class="py-1.5 px-2.5 rounded-lg bg-slate-900 text-slate-500 border border-slate-700 font-black text-[10px] transition">
+              ブレイク∞: 未解放
+            </button>
+          </div>
+        </div>
+
+        <!-- Infinity Upgrades (IP & IC Time) -->
+        <div class="rounded-xl bg-slate-950/90 border border-indigo-500/35 p-2 flex flex-col gap-1.5 shrink-0">
+          <div class="text-[11px] font-black text-indigo-300">インフィニティアップグレード</div>
+          <div id="ui-inf-upgrades" class="grid grid-cols-1 gap-1"></div>
+        </div>
+
+        <!-- Infinity Challenges IC1 - IC9 -->
+        <div class="rounded-xl bg-slate-950/90 border border-rose-500/35 p-2 flex flex-col gap-1.5 shrink-0">
+          <div class="flex items-center justify-between">
+            <div class="text-[11px] font-black text-rose-300">インフィニティチャレンジ (IC1〜IC9)</div>
+            <button id="btn-exit-ic" onclick="exitInfinityChallenge()" class="hidden px-2 py-0.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px]">
+              挑戦を中断
+            </button>
+          </div>
+          <div class="text-[9px] text-slate-400">目標: 制約下で 1.80e308 円に到達。全9種クリアでブレイクインフィニティ解放！</div>
+          <div id="ui-ic-list" class="flex flex-col gap-1.5"></div>
+        </div>
+      </div>
+
+      <!-- TAB 3: ACHIEVEMENTS (28) -->
+      <div id="tab-content-ach" class="tab-pane hidden flex-1 min-h-0 flex flex-col gap-1.5 overflow-y-auto custom-scroll pr-0.5">
+        <div class="flex items-center justify-between pb-1 border-b border-amber-500/25 shrink-0">
+          <span class="text-xs font-black text-amber-300">実績一覧 (全28種)</span>
+          <span class="mono text-[10px] text-slate-300">達成: <strong id="ui-ach-summary" class="text-amber-300">0 / 28</strong></span>
+        </div>
+        <div id="ui-ach-list" class="grid grid-cols-1 gap-1"></div>
+      </div>
+
+      <!-- TAB 4: SETTINGS, STATS & DEV MODE (02884) -->
+      <div id="tab-content-sys" class="tab-pane hidden flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto custom-scroll pr-0.5">
+        <!-- Notation Toggle -->
+        <div class="rounded-xl bg-slate-950/90 border border-cyan-500/30 p-2.5 flex flex-col gap-2">
+          <div class="text-xs font-black text-cyan-300">表示・システム設定</div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] text-slate-300 font-bold">数値表記フォーマット</span>
+            <button id="btn-notation" onclick="toggleNotation()" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border border-cyan-400/50 font-black text-xs transition">
+              標準表記 (T, Qa, Vg...)
+            </button>
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button onclick="manualSave()" class="flex-1 py-1.5 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/50 font-black text-xs">
+              手動セーブ
+            </button>
+            <button onclick="openResetModal()" class="flex-1 py-1.5 rounded-lg bg-rose-600/25 hover:bg-rose-600/40 text-rose-300 border border-rose-500/50 font-black text-xs">
+              データ初期化
+            </button>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="rounded-xl bg-slate-950/90 border border-slate-700/70 p-2.5 flex flex-col gap-1 text-[11px]">
+          <div class="text-xs font-black text-slate-200 mb-0.5">運行統計データ</div>
+          <div class="flex justify-between"><span class="text-slate-400">プレイ時間</span><span id="stat-playtime" class="mono font-bold text-slate-200">00:00:00</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">累計獲得スコア</span><span id="stat-cumscore" class="mono font-bold text-emerald-300">¥4.00</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">総周回数</span><span id="stat-totallaps" class="mono font-bold text-cyan-300">0</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">プレステージ回数</span><span id="stat-prestiges" class="mono font-bold text-sky-300">0</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">プロモーション回数</span><span id="stat-promos" class="mono font-bold text-amber-300">0</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">インフィニティ回数</span><span id="stat-infs" class="mono font-bold text-purple-300">0</span></div>
+        </div>
+
+        <!-- Secret Developer Mode Code Box -->
+        <div class="rounded-xl bg-slate-950/90 border border-fuchsia-500/35 p-2.5 flex flex-col gap-2">
+          <div class="text-xs font-black text-fuchsia-300">指令室アクセスコード</div>
+          <div class="flex gap-1.5">
+            <input id="dev-code-input" type="password" placeholder="コードを入力..." class="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white mono focus:outline-none focus:border-fuchsia-400" />
+            <button onclick="checkDevCode()" class="px-3 py-1.5 rounded-lg bg-fuchsia-600/30 hover:bg-fuchsia-600/50 text-fuchsia-200 border border-fuchsia-400/50 font-black text-xs shrink-0">
+              認証
+            </button>
+          </div>
+
+          <!-- Unlocked Developer Controls -->
+          <div id="dev-panel" class="hidden flex-col gap-2 pt-2 border-t border-fuchsia-500/30">
+            <div class="text-[10px] font-black text-fuchsia-400">★ 開発者モード稼働中 (CODE: 02884)</div>
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[10px] text-slate-300">ゲーム速度: <strong id="dev-speed-label" class="mono text-fuchsia-300">×1</strong></span>
+              <div class="flex gap-1">
+                <button onclick="setDevSpeed(1)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-bold">×1</button>
+                <button onclick="setDevSpeed(10)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-bold">×10</button>
+                <button onclick="setDevSpeed(100)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-bold">×100</button>
+                <button onclick="setDevSpeed(1000)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-bold">×1000</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button onclick="devAddMoney(10)" class="py-1 px-2 rounded bg-emerald-900/50 hover:bg-emerald-800/70 border border-emerald-500/40 text-[10px] font-black text-emerald-200">資金 ×1e10</button>
+              <button onclick="devAddMoney(50)" class="py-1 px-2 rounded bg-emerald-900/50 hover:bg-emerald-800/70 border border-emerald-500/40 text-[10px] font-black text-emerald-200">資金 ×1e50</button>
+              <button onclick="devSetInfinity()" class="py-1 px-2 rounded bg-purple-900/50 hover:bg-purple-800/70 border border-purple-500/40 text-[10px] font-black text-purple-200">資金 1.80e308</button>
+              <button onclick="devAddIP(100)" class="py-1 px-2 rounded bg-fuchsia-900/50 hover:bg-fuchsia-800/70 border border-fuchsia-500/40 text-[10px] font-black text-fuchsia-200">+100 IP & 1∞</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-3 right-3 z-50 flex flex-col gap-1.5 pointer-events-none max-w-xs"></div>
+
+  <!-- CUSTOM RESET CONFIRMATION MODAL -->
+  <div id="reset-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="holo-panel rounded-2xl p-5 max-w-sm w-full border border-rose-500/50 flex flex-col gap-3">
+      <div class="text-sm font-black text-rose-400">セーブデータの完全初期化</div>
+      <p class="text-xs text-slate-300 leading-relaxed">
+        すべての運行記録、プレステージ、プロモーション、インフィニティ、実績を完全に削除して最初からやり直しますか？
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeResetModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200">キャンセル</button>
+        <button onclick="executeHardReset()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-xs font-black text-white">初期化する</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CUSTOM BIGNUM ENGINE (Mantissa + Exponent for values past 1.80e308)
+    // =========================================================================
+    class BigNum {
+      constructor(m = 0, e = 0) {
+        if (m instanceof BigNum) {
+          this.m = m.m;
+          this.e = m.e;
+          return;
+        }
+        if (typeof m === 'string') {
+          const parsed = BigNum.fromString(m);
+          this.m = parsed.m;
+          this.e = parsed.e;
+          return;
+        }
+        this.m = Number(m) || 0;
+        this.e = Number(e) || 0;
+        this.normalize();
+      }
+
+      normalize() {
+        if (!Number.isFinite(this.m) || !Number.isFinite(this.e) || this.m === 0) {
+          this.m = 0;
+          this.e = 0;
+          return this;
+        }
+        const sign = this.m < 0 ? -1 : 1;
+        let absM = Math.abs(this.m);
+        if (absM >= 10 || absM < 1) {
+          const shift = Math.floor(Math.log10(absM));
+          absM /= Math.pow(10, shift);
+          this.e += shift;
+        }
+        if (absM >= 9.9999999999999) {
+          absM = 1;
+          this.e += 1;
+        }
+        this.m = sign * absM;
+        return this;
+      }
+
+      static fromNumber(n) {
+        if (n === 0 || !Number.isFinite(n)) return new BigNum(0, 0);
+        return new BigNum(n, 0);
+      }
+
+      static fromExp10(exp) {
+        if (!Number.isFinite(exp)) return new BigNum(1.8, 308);
+        if (exp < -300) return new BigNum(0, 0);
+        const e = Math.floor(exp);
+        const m = Math.pow(10, exp - e);
+        return new BigNum(m, e);
+      }
+
+      static fromString(str) {
+        const s = String(str).trim();
+        if (!s || s === '0') return new BigNum(0, 0);
+        const parts = s.toLowerCase().split('e');
+        if (parts.length === 2) {
+          return new BigNum(parseFloat(parts[0]), parseFloat(parts[1]));
+        }
+        return new BigNum(parseFloat(s), 0);
+      }
+
+      clone() {
+        return new BigNum(this.m, this.e);
+      }
+
+      log10() {
+        if (this.m <= 0) return -Infinity;
+        return this.e + Math.log10(this.m);
+      }
+
+      toNumber() {
+        if (this.m === 0) return 0;
+        if (this.e > 308) return Infinity;
+        if (this.e < -308) return 0;
+        return this.m * Math.pow(10, this.e);
+      }
+
+      cmp(other) {
+        const b = other instanceof BigNum ? other : BigNum.fromNumber(other);
+        if (this.m === 0 && b.m === 0) return 0;
+        if (this.m > 0 && b.m <= 0) return 1;
+        if (this.m <= 0 && b.m > 0) return -1;
+        if (this.e !== b.e) return this.e > b.e ? 1 : -1;
+        if (Math.abs(this.m - b.m) < 1e-12) return 0;
+        return this.m > b.m ? 1 : -1;
+      }
+
+      gt(o) { return this.cmp(o) > 0; }
+      gte(o) { return this.cmp(o) >= 0; }
+      lt(o) { return this.cmp(o) < 0; }
+      lte(o) { return this.cmp(o) <= 0; }
+
+      add(other) {
+        const b = other instanceof BigNum ? other : BigNum.fromNumber(other);
+        if (this.m === 0) return b.clone();
+        if (b.m === 0) return this.clone();
+        const diff = this.e - b.e;
+        if (diff > 15) return this.clone();
+        if (diff < -15) return b.clone();
+        if (diff >= 0) {
+          return new BigNum(this.m + b.m * Math.pow(10, -diff), this.e);
+        } else {
+          return new BigNum(this.m * Math.pow(10, diff) + b.m, b.e);
+        }
+      }
+
+      sub(other) {
+        const b = other instanceof BigNum ? other : BigNum.fromNumber(other);
+        if (b.m === 0) return this.clone();
+        if (this.lte(b)) return new BigNum(0, 0);
+        const diff = this.e - b.e;
+        if (diff > 15) return this.clone();
+        return new BigNum(this.m - b.m * Math.pow(10, -diff), this.e);
+      }
+
+      mul(other) {
+        const b = other instanceof BigNum ? other : BigNum.fromNumber(other);
+        if (this.m === 0 || b.m === 0) return new BigNum(0, 0);
+        return new BigNum(this.m * b.m, this.e + b.e);
+      }
+
+      div(other) {
+        const b = other instanceof BigNum ? other : BigNum.fromNumber(other);
+        if (this.m === 0 || b.m === 0) return new BigNum(0, 0);
+        return new BigNum(this.m / b.m, this.e - b.e);
+      }
+
+      pow(power) {
+        if (power === 0) return new BigNum(1, 0);
+        if (this.m <= 0) return new BigNum(0, 0);
+        const totalExp = this.log10() * power;
+        return BigNum.fromExp10(totalExp);
+      }
+    }
+
+    const INFINITY_CAP = new BigNum(1.80, 308);
+    const STANDARD_SUFFIXES = [
+      '', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No',
+      'Dc', 'UDc', 'DDc', 'TDc', 'QaDc', 'QiDc', 'SxDc', 'SpDc', 'OcDc', 'NoDc',
+      'Vg', 'UVg', 'DVg', 'TVg', 'QaVg', 'QiVg', 'SxVg', 'SpVg', 'OcVg', 'NoVg',
+      'Tg', 'UTg', 'DTg', 'TTg', 'QaTg', 'QiTg', 'SxTg', 'SpTg', 'OcTg', 'NoTg',
+      'Qd', 'UQd', 'DQd', 'TQd', 'QaQd', 'QiQd', 'SxQd', 'SpQd', 'OcQd', 'NoQd',
+      'Qn', 'UQn', 'DQn', 'TQn', 'QaQn', 'QiQn', 'SxQn', 'SpQn', 'OcQn', 'NoQn',
+      'Se', 'USe', 'DSe', 'TSe', 'QaSe', 'QiSe', 'SxSe', 'SpSe', 'OcSe', 'NoSe',
+      'St', 'USt', 'DSt', 'TSt', 'QaSt', 'QiSt', 'SxSt', 'SpSt', 'OcSt', 'NoSt',
+      'Og', 'UOg', 'DOg', 'TOg', 'QaOg', 'QiOg', 'SxOg', 'SpOg', 'OcOg', 'NoOg',
+      'Nn', 'UNn', 'DNn', 'TNn', 'QaNn', 'QiNn', 'SxNn', 'SpNn', 'OcNn', 'NoNn',
+      'Ce'
+    ];
+
+    function formatBN(val, decimals = 2) {
+      const bn = val instanceof BigNum ? val : BigNum.fromNumber(val);
+      if (bn.m === 0) return '0.00';
+      const e = bn.e;
+      if (e < 3 && e >= -2) {
+        return bn.toNumber().toFixed(decimals);
+      }
+      if (state.notation === 'standard') {
+        const tier = Math.floor(e / 3);
+        if (tier >= 0 && tier < STANDARD_SUFFIXES.length) {
+          const scaled = bn.m * Math.pow(10, e - tier * 3);
+          return `${scaled.toFixed(decimals)}${STANDARD_SUFFIXES[tier]}`;
+        }
+      }
+      return `${bn.m.toFixed(decimals)}e${e}`;
+    }
+
+    function formatYen(val) {
+      return `¥${formatBN(val, 2)}`;
+    }
+
+    // =========================================================================
+    // 2. STATIC DEFINITIONS (10 LINES, 4 PROMOTIONS, 9 ICs, 28 ACHIEVEMENTS)
+    // =========================================================================
+    const LINE_DEFS = [
+      { id: 0, name: '赤線 (レッド)',     color: '#ef4444', baseCost: new BigNum(4, 0),    costR: 1.20, baseSpeed: 0.200 },
+      { id: 1, name: '橙線 (オレンジ)',   color: '#f97316', baseCost: new BigNum(1, 2),    costR: 1.24, baseSpeed: 0.100 },
+      { id: 2, name: '黄線 (イエロー)',   color: '#eab308', baseCost: new BigNum(1, 3),    costR: 1.28, baseSpeed: 1 / 15 },
+      { id: 3, name: '緑線 (グリーン)',   color: '#22c55e', baseCost: new BigNum(1, 4),    costR: 1.32, baseSpeed: 0.050 },
+      { id: 4, name: '青緑線 (ティール)', color: '#14b8a6', baseCost: new BigNum(1, 6),    costR: 1.36, baseSpeed: 0.040 },
+      { id: 5, name: '水線 (シアン)',     color: '#06b6d4', baseCost: new BigNum(1, 9),    costR: 1.40, baseSpeed: 1 / 30 },
+      { id: 6, name: '青線 (ブルー)',     color: '#3b82f6', baseCost: new BigNum(1, 12),   costR: 1.44, baseSpeed: 1 / 35 },
+      { id: 7, name: '紫線 (パープル)',   color: '#a855f7', baseCost: new BigNum(1, 15),   costR: 1.48, baseSpeed: 0.025 },
+      { id: 8, name: '桃線 (ピンク)',     color: '#ec4899', baseCost: new BigNum(1, 18),   costR: 1.52, baseSpeed: 1 / 45 },
+      { id: 9, name: '白線 (ホワイト)',   color: '#f8fafc', baseCost: new BigNum(1, 27),   costR: 1.56, baseSpeed: 0.020 }
+    ];
+
+    const PROMO_DEFS = [
+      { id: 0, title: '#1 倍率獲得倍率', desc: '全路線のマルチゲインがアップ' },
+      { id: 1, title: '#2 ラップ速度倍率', desc: '全路線のラップ速度がアップ' },
+      { id: 2, title: '#3 アセンションパワー', desc: '全路線のアセンションパワーがアップ' },
+      { id: 3, title: '#4 プロモーションパワー', desc: 'プロモーション#1・#2・#3の効果がアップ' }
+    ];
+
+    const IC_DEFS = [
+      { id: 1, name: 'IC1: イオン化速度', constraint: '制約: プロモーション#2と#4が無効化', reward: '報酬: プロモーション#2と#4が強化される' },
+      { id: 2, name: 'IC2: 降下',         constraint: '制約: アセンションパワーが1/4になる', reward: '報酬: アセンションパワーが1.2倍になる' },
+      { id: 3, name: 'IC3: 最初の根',     constraint: '制約: 共通指数 -0.40', reward: '報酬: 共通指数 +0.03' },
+      { id: 4, name: 'IC4: 急勾配',       constraint: '制約: 全プレステージとプロモーション獲得量が ^0.4', reward: '報酬: ∞後の全プロモーションに+1Lv、IP獲得量×2' },
+      { id: 5, name: 'IC5: 解雇された',   constraint: '制約: すべてのプロモーションが大幅に弱体化', reward: '報酬: すべてのプロモーションを少し強化する' },
+      { id: 6, name: 'IC6: 枯渇',         constraint: '制約: すべての倍率が非常に速く減少する', reward: '報酬: すべての路線の倍率獲得量が2倍強化される' },
+      { id: 7, name: 'IC7: 二次分割',     constraint: '制約: 全乗数が (最速∞タイム)^2 で割られる', reward: '報酬: 全乗数を (最速∞タイム)^2 で乗算する' },
+      { id: 8, name: 'IC8: 非上昇',       constraint: '制約: アセンションが無効化される', reward: '報酬: 基礎アセンションパワー +2' },
+      { id: 9, name: 'IC9: 孤立主義',     constraint: '制約: 4色(赤・橙・黄・緑)のみでプレイ', reward: '報酬: インフィニティ獲得量(∞)を倍増' }
+    ];
+
+    const ACH_DEFS = [
+      { id: 1,  name: '100万',               desc: '1,000,000スコアに到達する', reward: '' },
+      { id: 2,  name: '初アセンション',       desc: '購入要素をアセンションする', reward: '' },
+      { id: 3,  name: 'RGB',                 desc: '青の路線を購入する', reward: '' },
+      { id: 4,  name: 'プレステージしよう',   desc: '初めてプレステージをする', reward: '報酬: 購入数指定ボタン解放' },
+      { id: 5,  name: '1,000越え',           desc: 'いずれかの倍率を1,000以上にする', reward: '' },
+      { id: 6,  name: '2回目のアセンション', desc: 'アセンション2に到達する', reward: '' },
+      { id: 7,  name: 'ダブルプレステージ',   desc: 'プレステージを2回行う', reward: '' },
+      { id: 8,  name: 'プロモーションの時間', desc: 'P.倍率を×1,000にする', reward: '' },
+      { id: 9,  name: '色彩スペクトル',       desc: '白を購入する', reward: '報酬: ラップ速度 ×1.05' },
+      { id: 10, name: '指数の力',             desc: '指数を1.1以上にする', reward: '' },
+      { id: 11, name: '初プロモート',         desc: '初めてプロモートする', reward: '' },
+      { id: 12, name: '点滅防止',             desc: '赤の路線の1秒ごとの回転数が10を超える', reward: '' },
+      { id: 13, name: '巨大倍率',             desc: 'P.倍率を×1,000,000にする', reward: '' },
+      { id: 14, name: 'アップデートはまだ？', desc: '5時間プレイする', reward: '報酬: 全ての倍率獲得量 ×1.05' },
+      { id: 15, name: 'さらに先へ',           desc: '指数を1.2以上にする', reward: '' },
+      { id: 16, name: 'それって大きい数字？', desc: '1.00Vg円 (1e63円) を所持する', reward: '' },
+      { id: 17, name: '大きな倍率',           desc: '全ての倍率を1,000より大きくする', reward: '' },
+      { id: 18, name: 'よくやった',           desc: 'レベル10のプロモーションを一つ所持する', reward: '' },
+      { id: 19, name: '本当によくやった',     desc: '全てのプロモーションをレベル10以上にする', reward: '報酬: プロモーション#4が少し強化される' },
+      { id: 20, name: 'それはいらない',       desc: 'プレステージせずにプロモートする', reward: '報酬: P.倍率獲得量 ^1.01' },
+      { id: 21, name: 'グーゴル',             desc: '10.0DTg (1e100円) を所持する', reward: '' },
+      { id: 22, name: '高速スケーリング',     desc: '基礎倍率獲得量を1以上にする', reward: '' },
+      { id: 23, name: '大きな一歩',           desc: '1回のプレステージでP.倍率を1,000,000倍にする', reward: '' },
+      { id: 24, name: 'たった3つ',           desc: '3路線だけでプレステージする', reward: '' },
+      { id: 25, name: '楽々プレステージ',     desc: 'プレステージもアセンションもせずにプロモートする', reward: '' },
+      { id: 26, name: '最高だ！',             desc: '赤、オレンジ、黄を第6アセンションまで進める', reward: '' },
+      { id: 27, name: '真のボス',             desc: '全てのプロモーションをレベル50以上にする', reward: '' },
+      { id: 28, name: 'インフィニティ',       desc: 'インフィニティに到達する', reward: '' }
+    ];
+
+    const INF_UPG_DEFS = [
+      { id: 'iu1', name: '無限軌道ブースト', desc: '全路線の倍率獲得量 ×3', baseCost: new BigNum(1, 0), costMult: 4 },
+      { id: 'iu2', name: '超伝導リニア化', desc: '全路線のラップ速度 ×1.5', baseCost: new BigNum(2, 0), costMult: 5 },
+      { id: 'iu3', name: '自己破産コンデンサ', desc: 'P.倍率獲得量 ×5', baseCost: new BigNum(3, 0), costMult: 6 },
+      { id: 'iu4', name: '次元指数増幅器', desc: '共通指数 +0.02', baseCost: new BigNum(10, 0), costMult: 10 },
+      { id: 'iu5', name: 'ICタイム共鳴炉', desc: 'IC総クリア時間が短いほど全マルチゲイン強化', baseCost: new BigNum(5, 0), costMult: 8 }
+    ];
+
+    // =========================================================================
+    // 3. GAME STATE & INITIALIZATION
+    // =========================================================================
+    function createInitialState() {
+      const lines = [];
+      for (let i = 0; i < 10; i++) {
+        lines.push({
+          level: i === 0 ? 1 : 0, // Red Line starts at Lv.1
+          ascensions: 0,
+          progress: 0,
+          mult: new BigNum(1, 0),
+          laps: 0
+        });
+      }
+      return {
+        score: new BigNum(4, 0),
+        cumScore: new BigNum(4, 0),
+        infCumScore: new BigNum(4, 0),
+        lines,
+        pMult: new BigNum(1, 0),
+        pExp: 1.00,
+        prestigeCount: 0,
+        promoLevels: [0, 0, 0, 0],
+        promoCount: 0,
+        everPrestigedThisPromo: false,
+        everAscendedThisPromo: false,
+        infinities: new BigNum(0, 0),
+        ip: new BigNum(0, 0),
+        infUpgrades: { iu1: 0, iu2: 0, iu3: 0, iu4: 0, iu5: 0 },
+        fastestInfTime: null,
+        infRunTime: 0,
+        activeIC: 0,
+        icCompleted: {},
+        icBestTimes: {},
+        breakInfinity: false,
+        achievements: {},
+        buyAmountMode: 0,
+        notation: 'standard',
+        playTime: 0,
+        totalLaps: 0,
+        devUnlocked: false,
+        devSpeed: 1
+      };
+    }
+
+    let state = createInitialState();
+    const BUY_MODES = [1, 5, 10, 25, 100, 'max'];
+
+    // =========================================================================
+    // 4. CORE FORMULAS & MECHANICS
+    // =========================================================================
+    function getUnlockedLineCount() {
+      const maxAllowed = state.activeIC === 9 ? 4 : 10;
+      let count = 1;
+      for (let i = 0; i < maxAllowed - 1; i++) {
+        if (state.lines[i].level >= 5 || state.lines[i].ascensions > 0) {
+          count = i + 2;
+        } else {
+          break;
+        }
+      }
+      return Math.min(count, maxAllowed);
+    }
+
+    function getMaxLevel(i) {
+      return 100 + state.lines[i].ascensions * 10;
+    }
+
+    function getPromoPowerMultiplier() {
+      let p4Lv = state.promoLevels[3];
+      if (state.activeIC === 1) p4Lv = 0;
+      let power = 1 + p4Lv * 0.25;
+      if (state.achievements[19]) power *= 1.15;
+      if (state.icCompleted[1]) power *= 1.15;
+      if (state.icCompleted[5]) power *= 1.10;
+      if (state.activeIC === 5) power *= 0.35;
+      return power;
+    }
+
+    function getEffectivePromoEffect(idx) {
+      if (state.activeIC === 1 && (idx === 1 || idx === 3)) return 1;
+      const lv = state.promoLevels[idx];
+      if (lv <= 0) return 1;
+      const pPower = getPromoPowerMultiplier();
+      let baseMult = 1;
+      if (idx === 0) baseMult = Math.pow(1.65, lv * pPower);
+      if (idx === 1) baseMult = Math.pow(1.28, lv * pPower);
+      if (idx === 2) baseMult = 1 + lv * 1.5 * pPower;
+      if (idx === 3) return pPower;
+      if (state.activeIC === 5) baseMult = Math.pow(baseMult, 0.35);
+      if (state.icCompleted[5]) baseMult = Math.pow(baseMult, 1.08);
+      if (idx === 1 && state.icCompleted[1]) baseMult *= 1.25;
+      return baseMult;
+    }
+
+    function getAscensionPower() {
+      let base = 10;
+      if (state.icCompleted[8]) base += 2;
+      base *= getEffectivePromoEffect(2);
+      if (state.icCompleted[2]) base *= 1.2;
+      if (state.activeIC === 2) base *= 0.25;
+      return base;
+    }
+
+    function getLineLapSpeed(i) {
+      const line = state.lines[i];
+      if (line.level <= 0) return 0;
+      let spd = LINE_DEFS[i].baseSpeed * line.level;
+      spd *= getEffectivePromoEffect(1);
+      if (state.achievements[9]) spd *= 1.05;
+      if (state.infUpgrades.iu2 > 0) spd *= Math.pow(1.5, state.infUpgrades.iu2);
+      return spd;
+    }
+
+    function getBaseMultGainPerLine(i) {
+      let gain = 0.01;
+      gain *= getEffectivePromoEffect(0);
+      if (state.achievements[14]) gain *= 1.05;
+      if (state.infUpgrades.iu1 > 0) gain *= Math.pow(3, state.infUpgrades.iu1);
+      if (state.icCompleted[6]) gain *= 2;
+      if (state.infUpgrades.iu5 > 0) {
+        const totalIcSec = getTotalICTime();
+        const factor = totalIcSec > 0 ? Math.max(1.5, 60 / Math.max(1, totalIcSec)) : 1.5;
+        gain *= Math.pow(factor, state.infUpgrades.iu5);
+      }
+      return gain;
+    }
+
+    function getLineMultGain(i) {
+      let gain = getBaseMultGainPerLine(i);
+      const ascPow = getAscensionPower();
+      if (state.lines[i].ascensions > 0) {
+        gain *= Math.pow(ascPow, state.lines[i].ascensions);
+      }
+      return gain;
+    }
+
+    function getCommonExponent() {
+      let exp = state.pExp;
+      if (state.icCompleted[3]) exp += 0.03;
+      if (state.infUpgrades.iu4 > 0) exp += 0.02 * state.infUpgrades.iu4;
+      if (state.activeIC === 3) exp -= 0.40;
+      return Math.max(0.1, exp);
+    }
+
+    function getGlobalIC7Multiplier() {
+      if (!state.fastestInfTime || state.fastestInfTime <= 0) return 1;
+      const t = Math.max(0.1, state.fastestInfTime);
+      if (state.activeIC === 7) return 1 / (t * t);
+      if (state.icCompleted[7]) return t * t;
+      return 1;
+    }
+
+    function getTotalMultiplierBeforeExp() {
+      let prod = new BigNum(1, 0);
+      for (let i = 0; i < 10; i++) {
+        prod = prod.mul(state.lines[i].mult);
+      }
+      prod = prod.mul(state.pMult);
+      const ic7 = getGlobalIC7Multiplier();
+      if (ic7 !== 1) prod = prod.mul(ic7);
+      return prod;
+    }
+
+    function getPayoutPerLap() {
+      const mult = getTotalMultiplierBeforeExp();
+      const exp = getCommonExponent();
+      return mult.pow(exp);
+    }
+
+    function getSingleLevelCost(i, targetAsc, targetLevel) {
+      const def = LINE_DEFS[i];
+      let logCost = def.baseCost.log10();
+      for (let prevA = 0; prevA < targetAsc; prevA++) {
+        const rPrev = def.costR + 0.1 * prevA;
+        logCost += 100 * Math.log10(rPrev);
+      }
+      const rCur = def.costR + 0.1 * targetAsc;
+      logCost += targetLevel * Math.log10(rCur);
+      return BigNum.fromExp10(logCost);
+    }
+
+    function getNextUpgradeInfo(i) {
+      const line = state.lines[i];
+      const maxLv = getMaxLevel(i);
+      const remaining = maxLv - line.level;
+      if (remaining <= 0) {
+        return { count: 0, cost: new BigNum(0, 0) };
+      }
+
+      const mode = state.achievements[4] ? BUY_MODES[state.buyAmountMode] : 1;
+      const desired = mode === 'max' ? remaining : Math.min(mode, remaining);
+
+      let totalCost = new BigNum(0, 0);
+      let affordableCount = 0;
+
+      for (let step = 0; step < desired; step++) {
+        const c = getSingleLevelCost(i, line.ascensions, line.level + step);
+        const nextTotal = totalCost.add(c);
+        if (mode === 'max') {
+          if (state.score.gte(nextTotal)) {
+            totalCost = nextTotal;
+            affordableCount++;
+          } else {
+            if (step === 0) totalCost = c;
+            break;
+          }
+        } else {
+          totalCost = nextTotal;
+          affordableCount = desired;
+        }
+      }
+
+      return {
+        count: mode === 'max' ? affordableCount : desired,
+        cost: totalCost
+      };
+    }
+
+    function getPotentialPrestige() {
+      if (state.cumScore.lt(new BigNum(1, 10))) {
+        return { unlocked: false, pMult: new BigNum(1, 0), pExp: 1.00 };
+      }
+      const logS = Math.max(10, state.cumScore.log10());
+      let expMult = Math.max(0, (logS - 10) * 0.25);
+      if (state.achievements[20]) expMult *= 1.01;
+      let nextPMult = BigNum.fromExp10(expMult);
+      if (state.infUpgrades.iu3 > 0) {
+        nextPMult = nextPMult.mul(Math.pow(5, state.infUpgrades.iu3));
+      }
+      if (state.activeIC === 4) {
+        nextPMult = nextPMult.pow(0.4);
+      }
+
+      let nextPExp = 1.03 + Math.max(0, (logS - 10) * 0.008);
+      if (state.activeIC === 4) {
+        nextPExp = 1 + (nextPExp - 1) * 0.4;
+      }
+      nextPExp = Math.round(nextPExp * 100) / 100;
+
+      return {
+        unlocked: true,
+        pMult: nextPMult.gt(state.pMult) ? nextPMult : state.pMult.clone(),
+        pExp: Math.max(state.pExp, nextPExp)
+      };
+    }
+
+    function getCurrentPromoExp() {
+      const logPM = Math.max(0, state.pMult.log10());
+      if (logPM < 0.5) return 0;
+      const raw = Math.floor(Math.pow(logPM / 4.12447, 1.35) * 8);
+      if (state.activeIC === 4) return Math.floor(Math.pow(raw, 0.4));
+      return Math.max(0, raw);
+    }
+
+    function getPromoTargetLevel(idx, exp) {
+      if (exp <= 0) return state.promoLevels[idx];
+      const maxAffordable = Math.floor(Math.log2(exp));
+      return Math.max(state.promoLevels[idx], maxAffordable);
+    }
+
+    // =========================================================================
+    // 5. PLAYER ACTIONS
+    // =========================================================================
+    function addScore(amount) {
+      if (amount.lte(0)) return;
+      state.score = state.score.add(amount);
+      state.cumScore = state.cumScore.add(amount);
+      state.infCumScore = state.infCumScore.add(amount);
+
+      if (!state.breakInfinity && state.score.gt(INFINITY_CAP)) {
+        state.score = INFINITY_CAP.clone();
+      }
+    }
+
+    function buyLine(i) {
+      const unlocked = getUnlockedLineCount();
+      if (i >= unlocked) return;
+      const line = state.lines[i];
+      const maxLv = getMaxLevel(i);
+      if (line.level >= maxLv) return;
+
+      const info = getNextUpgradeInfo(i);
+      if (info.count <= 0 || state.score.lt(info.cost)) return;
+
+      state.score = state.score.sub(info.cost);
+      line.level += info.count;
+      checkAchievements();
+    }
+
+    function buyAllLines() {
+      if (state.cumScore.lt(new BigNum(1, 6)) && state.score.lt(new BigNum(1, 6))) return;
+      const unlocked = getUnlockedLineCount();
+      for (let i = 0; i < unlocked; i++) {
+        buyLine(i);
+      }
+    }
+
+    function cycleBuyAmount() {
+      if (!state.achievements[4]) return;
+      state.buyAmountMode = (state.buyAmountMode + 1) % BUY_MODES.length;
+    }
+
+    function ascendLine(i) {
+      if (state.activeIC === 8) {
+        showToast('IC8制約: アセンションは無効化されています！', 'rose');
+        return;
+      }
+      const line = state.lines[i];
+      const maxLv = getMaxLevel(i);
+      if (line.level < maxLv) return;
+
+      line.ascensions += 1;
+      line.level = 5;
+      state.everAscendedThisPromo = true;
+      checkAchievements();
+      showToast(`${LINE_DEFS[i].name} 複々線化 (A:${line.ascensions}) 完了！`, 'amber');
+    }
+
+    function ascendAllLines() {
+      if (state.activeIC === 8) return;
+      const unlocked = getUnlockedLineCount();
+      let count = 0;
+      for (let i = 0; i < unlocked; i++) {
+        if (state.lines[i].level >= getMaxLevel(i)) {
+          ascendLine(i);
+          count++;
+        }
+      }
+      if (count > 0) showToast(`${count}路線を一括複々線化しました！`, 'amber');
+    }
+
+    function resetPrePrestigeProgress() {
+      state.score = new BigNum(4, 0);
+      state.cumScore = new BigNum(4, 0);
+      for (let i = 0; i < 10; i++) {
+        state.lines[i].level = i === 0 ? 1 : 0;
+        state.lines[i].ascensions = 0;
+        state.lines[i].progress = 0;
+        state.lines[i].mult = new BigNum(1, 0);
+      }
+    }
+
+    function doPrestige() {
+      const pot = getPotentialPrestige();
+      if (!pot.unlocked) return;
+
+      if (pot.pMult.div(state.pMult).gte(new BigNum(1, 6))) {
+        unlockAchievement(23);
+      }
+      if (getUnlockedLineCount() === 3) {
+        unlockAchievement(24);
+      }
+
+      state.pMult = pot.pMult;
+      state.pExp = pot.pExp;
+      state.prestigeCount += 1;
+      state.everPrestigedThisPromo = true;
+
+      resetPrePrestigeProgress();
+      checkAchievements();
+      showToast(`自己破産実行！ P.倍率 ×${formatBN(state.pMult)} / P.指数 ^${state.pExp.toFixed(2)}`, 'sky');
+    }
+
+    function doPromote(idx) {
+      const curExp = getCurrentPromoExp();
+      const targetLv = getPromoTargetLevel(idx, curExp);
+      if (targetLv <= state.promoLevels[idx]) return;
+
+      if (state.promoCount === 0) {
+        if (idx !== 0 || targetLv < 3) {
+          showToast('初回プロモーションは #1 倍率獲得倍率 を Lv.3以上 にする必要があります', 'amber');
+          return;
+        }
+      }
+
+      if (!state.everPrestigedThisPromo) {
+        unlockAchievement(20);
+        if (!state.everAscendedThisPromo) {
+          unlockAchievement(25);
+        }
+      }
+
+      state.promoLevels[idx] = targetLv;
+      state.promoCount += 1;
+      state.pMult = new BigNum(1, 0);
+      state.pExp = 1.00;
+      state.everPrestigedThisPromo = false;
+      state.everAscendedThisPromo = false;
+
+      resetPrePrestigeProgress();
+      checkAchievements();
+      showToast(`ダイヤ改正完了！ ${PROMO_DEFS[idx].title} が Lv.${targetLv} に到達！`, 'amber');
+    }
+
+    function getIPGainOnInfinity() {
+      if (state.score.lt(INFINITY_CAP)) return new BigNum(0, 0);
+      if (!state.breakInfinity) {
+        let baseIP = new BigNum(1, 0);
+        if (state.icCompleted[4]) baseIP = baseIP.mul(2);
+        return baseIP;
+      }
+      const ratio = state.score.div(INFINITY_CAP);
+      let ip = ratio.pow(0.15);
+      if (ip.lt(1)) ip = new BigNum(1, 0);
+      if (state.icCompleted[4]) ip = ip.mul(2);
+      return ip;
+    }
+
+    function triggerInfinity() {
+      if (state.score.lt(INFINITY_CAP)) return;
+
+      if (state.activeIC > 0) {
+        const icId = state.activeIC;
+        state.icCompleted[icId] = true;
+        const prevBest = state.icBestTimes[icId];
+        if (!prevBest || state.infRunTime < prevBest) {
+          state.icBestTimes[icId] = state.infRunTime;
+        }
+        state.activeIC = 0;
+        showToast(`IC${icId} クリア達成！ (${state.infRunTime.toFixed(1)}秒)`, 'rose');
+      }
+
+      const ipGain = getIPGainOnInfinity();
+      let infGain = new BigNum(1, 0);
+      if (state.icCompleted[9]) infGain = infGain.mul(2);
+
+      state.infinities = state.infinities.add(infGain);
+      state.ip = state.ip.add(ipGain);
+
+      if (!state.fastestInfTime || state.infRunTime < state.fastestInfTime) {
+        state.fastestInfTime = Math.max(0.05, state.infRunTime);
+      }
+
+      state.pMult = new BigNum(1, 0);
+      state.pExp = 1.00;
+      const basePromoLv = state.icCompleted[4] ? 1 : 0;
+      state.promoLevels = [basePromoLv, basePromoLv, basePromoLv, basePromoLv];
+      state.promoCount = 0;
+      state.everPrestigedThisPromo = false;
+      state.everAscendedThisPromo = false;
+      state.infCumScore = new BigNum(4, 0);
+      state.infRunTime = 0;
+
+      resetPrePrestigeProgress();
+      unlockAchievement(28);
+      checkAchievements();
+      showToast(`∞ インフィニティ到達！ +${formatBN(ipGain, 0)} IP 獲得！`, 'purple');
+    }
+
+    function buyInfinityUpgrade(id) {
+      const def = INF_UPG_DEFS.find(u => u.id === id);
+      if (!def) return;
+      const lv = state.infUpgrades[id] || 0;
+      const cost = def.baseCost.mul(Math.pow(def.costMult, lv));
+      if (state.ip.lt(cost)) return;
+
+      state.ip = state.ip.sub(cost);
+      state.infUpgrades[id] = lv + 1;
+      showToast(`${def.name} Lv.${lv + 1} を購入しました！`, 'indigo');
+    }
+
+    function startInfinityChallenge(icId) {
+      if (state.infinities.lte(0) && !state.devUnlocked) {
+        showToast('まずは1回インフィニティに到達してください', 'purple');
+        return;
+      }
+      state.activeIC = icId;
+      state.pMult = new BigNum(1, 0);
+      state.pExp = 1.00;
+      state.promoLevels = [0, 0, 0, 0];
+      state.promoCount = 0;
+      state.infRunTime = 0;
+      resetPrePrestigeProgress();
+      showToast(`IC${icId} に挑戦開始！ 目標: 1.80e308 円`, 'rose');
+    }
+
+    function exitInfinityChallenge() {
+      if (state.activeIC === 0) return;
+      const id = state.activeIC;
+      state.activeIC = 0;
+      state.pMult = new BigNum(1, 0);
+      state.pExp = 1.00;
+      resetPrePrestigeProgress();
+      showToast(`IC${id} の挑戦を中断しました`, 'slate');
+    }
+
+    function getAllICCompletedCount() {
+      let c = 0;
+      for (let i = 1; i <= 9; i++) {
+        if (state.icCompleted[i]) c++;
+      }
+      return c;
+    }
+
+    function getTotalICTime() {
+      let sum = 0;
+      for (let i = 1; i <= 9; i++) {
+        if (state.icBestTimes[i]) sum += state.icBestTimes[i];
+      }
+      return sum;
+    }
+
+    function toggleBreakInfinity() {
+      if (getAllICCompletedCount() < 9) return;
+      state.breakInfinity = !state.breakInfinity;
+      showToast(`ブレイクインフィニティ: ${state.breakInfinity ? 'ON (上限突破)' : 'OFF'}`, 'purple');
+    }
+
+    // =========================================================================
+    // 6. ACHIEVEMENTS ENGINE
+    // =========================================================================
+    function unlockAchievement(id) {
+      if (state.achievements[id]) return;
+      state.achievements[id] = true;
+      const def = ACH_DEFS.find(a => a.id === id);
+      if (def) {
+        showToast(`🏆 実績解除 #${id}: ${def.name}`, 'amber');
+      }
+    }
+
+    function checkAchievements() {
+      if (state.score.gte(new BigNum(1, 6)) || state.cumScore.gte(new BigNum(1, 6))) unlockAchievement(1);
+      if (state.lines.some(l => l.ascensions >= 1)) unlockAchievement(2);
+      if (state.lines[6].level >= 1) unlockAchievement(3);
+      if (state.prestigeCount >= 1) unlockAchievement(4);
+      if (state.lines.some(l => l.mult.gte(1000))) unlockAchievement(5);
+      if (state.lines.some(l => l.ascensions >= 2)) unlockAchievement(6);
+      if (state.prestigeCount >= 2) unlockAchievement(7);
+      if (state.pMult.gte(1000)) unlockAchievement(8);
+      if (state.lines[9].level >= 1) unlockAchievement(9);
+      if (getCommonExponent() >= 1.1) unlockAchievement(10);
+      if (state.promoCount >= 1) unlockAchievement(11);
+      if (getLineLapSpeed(0) > 10) unlockAchievement(12);
+      if (state.pMult.gte(new BigNum(1, 6))) unlockAchievement(13);
+      if (state.playTime >= 18000) unlockAchievement(14);
+      if (getCommonExponent() >= 1.2) unlockAchievement(15);
+      if (state.score.gte(new BigNum(1, 63))) unlockAchievement(16);
+      if (state.lines.every(l => l.mult.gt(1000))) unlockAchievement(17);
+      if (state.promoLevels.some(lv => lv >= 10)) unlockAchievement(18);
+      if (state.promoLevels.every(lv => lv >= 10)) unlockAchievement(19);
+      if (state.score.gte(new BigNum(1, 100))) unlockAchievement(21);
+      if (getBaseMultGainPerLine(0) >= 1) unlockAchievement(22);
+      if (state.lines[0].ascensions >= 6 && state.lines[1].ascensions >= 6 && state.lines[2].ascensions >= 6) {
+        unlockAchievement(26);
+      }
+      if (state.promoLevels.every(lv => lv >= 50)) unlockAchievement(27);
+      if (state.infinities.gte(1)) unlockAchievement(28);
+    }
+
+    // =========================================================================
+    // 7. SIMULATION TICK
+    // =========================================================================
+    function tickSimulation(dt) {
+      const effectiveDt = dt * (state.devUnlocked ? state.devSpeed : 1);
+      state.playTime += dt;
+      state.infRunTime += effectiveDt;
+
+      if (!state.breakInfinity && state.score.gte(INFINITY_CAP)) {
+        state.score = INFINITY_CAP.clone();
+        if (state.activeIC > 0) {
+          triggerInfinity();
+        }
+        return;
+      }
+
+      const unlocked = getUnlockedLineCount();
+      let earnedThisTick = new BigNum(0, 0);
+
+      for (let i = 0; i < unlocked; i++) {
+        const line = state.lines[i];
+        if (line.level <= 0) continue;
+
+        if (state.activeIC === 6 && line.mult.gt(1)) {
+          const decayFactor = Math.pow(0.65, effectiveDt);
+          const nextM = line.mult.pow(decayFactor);
+          line.mult = nextM.lt(1) ? new BigNum(1, 0) : nextM;
+        }
+
+        const spd = getLineLapSpeed(i);
+        line.progress += spd * effectiveDt;
+
+        if (line.progress >= 1) {
+          const completedLaps = Math.floor(line.progress);
+          line.progress -= completedLaps;
+          line.laps += completedLaps;
+          state.totalLaps += completedLaps;
+
+          const gainPerLap = getLineMultGain(i);
+          line.mult = line.mult.add(gainPerLap * completedLaps);
+
+          const payout = getPayoutPerLap().mul(completedLaps);
+          earnedThisTick = earnedThisTick.add(payout);
+        }
+      }
+
+      if (earnedThisTick.gt(0)) {
+        addScore(earnedThisTick);
+      }
+
+      checkAchievements();
+    }
+
+    // =========================================================================
+    // 8. REALISTIC DOUBLE-RAIL TRACKS & DETAILED ELECTRIC TRAIN RENDERER
+    // =========================================================================
+    const canvas = document.getElementById('railway-canvas');
+    const ctx = canvas.getContext('2d');
+    let canvasW = 400;
+    let canvasH = 400;
+
+    function resizeCanvas() {
+      const wrapper = document.getElementById('canvas-wrapper');
+      if (!wrapper) return;
+      const cw = wrapper.clientWidth;
+      const ch = wrapper.clientHeight;
+      if (cw <= 0 || ch <= 0) return;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const nw = Math.floor(cw);
+      const nh = Math.floor(ch);
+      if (nw === canvasW && nh === canvasH && canvas.width === nw * dpr) return;
+
+      canvasW = nw;
+      canvasH = nh;
+      canvas.width = canvasW * dpr;
+      canvas.height = canvasH * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => resizeCanvas());
+      ro.observe(document.getElementById('canvas-wrapper'));
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Helper: Draw a realistic electric train carriage (Shinkansen / Cyber Commuter)
+    function drawTrainCar(ctx, x, y, angle, carW, carL, color, isLead, isHyper, nowSec) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle + Math.PI / 2);
+
+      // Headlight beam cone for lead car
+      if (isLead) {
+        const beamLen = isHyper ? 28 : 20;
+        const beamGrad = ctx.createLinearGradient(0, -carL * 0.5, 0, -carL * 0.5 - beamLen);
+        beamGrad.addColorStop(0, 'rgba(255, 255, 230, 0.55)');
+        beamGrad.addColorStop(1, 'rgba(255, 255, 230, 0)');
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(-carW * 0.35, -carL * 0.5);
+        ctx.lineTo(carW * 0.35, -carL * 0.5);
+        ctx.lineTo(carW * 1.6, -carL * 0.5 - beamLen);
+        ctx.lineTo(-carW * 1.6, -carL * 0.5 - beamLen);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Outer glow
+      ctx.shadowColor = color;
+      ctx.shadowBlur = isHyper ? 12 : 6;
+
+      // Train Body Chassis (Silver-white cyber roof + line livery stripe)
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      if (isLead) {
+        // Aerodynamic bullet nose cone at front (-Y)
+        ctx.moveTo(0, -carL * 0.68);
+        ctx.quadraticCurveTo(carW * 0.52, -carL * 0.35, carW * 0.5, carL * 0.45);
+        ctx.lineTo(-carW * 0.5, carL * 0.45);
+        ctx.quadraticCurveTo(-carW * 0.52, -carL * 0.35, 0, -carL * 0.68);
+      } else {
+        ctx.roundRect(-carW * 0.5, -carL * 0.5, carW, carL, 1.5);
+      }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Colored Livery Side Stripes
+      ctx.fillStyle = color;
+      ctx.fillRect(-carW * 0.5, -carL * 0.28, carW * 0.24, carL * 0.68);
+      ctx.fillRect(carW * 0.26, -carL * 0.28, carW * 0.24, carL * 0.68);
+
+      // Cockpit Windshield or Roof AC / Pantograph Details
+      if (isLead) {
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.moveTo(0, -carL * 0.48);
+        ctx.lineTo(carW * 0.34, -carL * 0.24);
+        ctx.lineTo(-carW * 0.34, -carL * 0.24);
+        ctx.closePath();
+        ctx.fill();
+
+        // Twin LED Headlights
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(-carW * 0.32, -carL * 0.52, 1.4, 1.4);
+        ctx.fillRect(carW * 0.32 - 1.4, -carL * 0.52, 1.4, 1.4);
+      } else {
+        // Roof HVAC unit + Pantograph diamond frame
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(-carW * 0.24, -carL * 0.28, carW * 0.48, carL * 0.28);
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 0.9;
+        ctx.strokeRect(-carW * 0.36, carL * 0.08, carW * 0.72, carL * 0.26);
+
+        // Quantum Pantograph Arc Spark when speed > 10 RPS
+        if (isHyper && Math.sin(nowSec * 45 + x) > 0.2) {
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(0, carL * 0.21, 2.3, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function renderRailwayCanvas(nowSec) {
+      const w = canvasW;
+      const h = canvasH;
+      const cx = w / 2;
+      const cy = h / 2;
+      const minDim = Math.min(w, h);
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Deep Cyber Space Radar Backdrop
+      const bgGrad = ctx.createRadialGradient(cx, cy, minDim * 0.02, cx, cy, minDim * 0.52);
+      bgGrad.addColorStop(0, '#0f2347');
+      bgGrad.addColorStop(0.45, '#050b1c');
+      bgGrad.addColorStop(1, '#02040a');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Dynamic Full-Fit Radii
+      const maxR = Math.max(46, minDim * 0.445);
+      const stationOuterR = Math.max(18, maxR * 0.24);
+      const minR = stationOuterR + Math.max(9, maxR * 0.068);
+      const stepR = (maxR - minR) / 9;
+
+      // Subtle Radar Crosshairs & Sweep
+      ctx.save();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.07)';
+      ctx.lineWidth = 1;
+      for (let k = 0; k < 8; k++) {
+        const ang = (k * Math.PI) / 4;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(ang) * stationOuterR, cy + Math.sin(ang) * stationOuterR);
+        ctx.lineTo(cx + Math.cos(ang) * (maxR + 8), cy + Math.sin(ang) * (maxR + 8));
+        ctx.stroke();
+      }
+      const sweepAngle = (nowSec * 0.7) % (Math.PI * 2);
+      ctx.strokeStyle = 'rgba(34, 211, 238, 0.16)';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(sweepAngle) * maxR, cy + Math.sin(sweepAngle) * maxR);
+      ctx.stroke();
+      ctx.restore();
+
+      const unlocked = getUnlockedLineCount();
+      const gaugeHalf = Math.max(1.6, Math.min(2.8, stepR * 0.17));
+
+      // Render 10 Concentric Double-Rail Tracks & Electric Trains
+      for (let i = 0; i < 10; i++) {
+        const def = LINE_DEFS[i];
+        const line = state.lines[i];
+        const r = minR + stepR * i;
+        const isUnlocked = i < unlocked;
+        const isActive = isUnlocked && line.level > 0;
+        const spd = getLineLapSpeed(i);
+        const isHyperBeam = spd > 10;
+
+        ctx.save();
+        if (!isUnlocked) {
+          // Blueprint survey dashed track for locked lines
+          ctx.setLineDash([3, 6]);
+          ctx.strokeStyle = 'rgba(71, 85, 105, 0.22)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+          continue;
+        }
+
+        // 1. Crushed Stone Ballast Bed (Subtle dark roadbed band)
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.lineWidth = gaugeHalf * 3.4;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 2. Wooden / Concrete Crossties (Sleepers)
+        const sleeperCount = Math.max(28, Math.floor(r * 0.95));
+        ctx.strokeStyle = isActive ? 'rgba(148, 163, 184, 0.34)' : 'rgba(100, 116, 139, 0.2)';
+        ctx.lineWidth = 1.6;
+        const tieHalf = gaugeHalf * 1.55;
+        for (let s = 0; s < sleeperCount; s++) {
+          const a = (s / sleeperCount) * Math.PI * 2;
+          const cos = Math.cos(a);
+          const sin = Math.sin(a);
+          ctx.beginPath();
+          ctx.moveTo(cx + cos * (r - tieHalf), cy + sin * (r - tieHalf));
+          ctx.lineTo(cx + cos * (r + tieHalf), cy + sin * (r + tieHalf));
+          ctx.stroke();
+        }
+
+        // 3. Double Steel Rails (Inner & Outer Parallel Rails)
+        ctx.strokeStyle = isActive ? def.color : 'rgba(100, 116, 139, 0.45)';
+        ctx.lineWidth = isHyperBeam ? 1.5 : 1.15;
+        if (isHyperBeam) {
+          ctx.shadowColor = def.color;
+          ctx.shadowBlur = 10;
+        }
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - gaugeHalf, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + gaugeHalf, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // 4. Multi-Car Electric Train Consist
+        if (isActive) {
+          const leadAngle = -Math.PI / 2 + line.progress * Math.PI * 2;
+          const carW = Math.max(4.4, gaugeHalf * 2.3);
+          const carL = Math.max(8.5, Math.min(13.5, stepR * 0.72));
+          const carGapAngle = (carL + 2.2) / Math.max(22, r);
+          const numCars = isHyperBeam ? 4 : 3;
+
+          // Draw Red Tail Lights on the rear car
+          const rearAngle = leadAngle - (numCars - 1) * carGapAngle - (carL * 0.5) / Math.max(22, r);
+          const rx = cx + Math.cos(rearAngle) * r;
+          const ry = cy + Math.sin(rearAngle) * r;
+          ctx.fillStyle = '#ff2a55';
+          ctx.shadowColor = '#ff2a55';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(rx, ry, 2.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Draw cars from rear to front so the nose overlaps cleanly
+          for (let c = numCars - 1; c >= 0; c--) {
+            const ca = leadAngle - c * carGapAngle;
+            const tx = cx + Math.cos(ca) * r;
+            const ty = cy + Math.sin(ca) * r;
+
+            // Coupler gangway between cars
+            if (c < numCars - 1) {
+              const nextCa = leadAngle - (c + 1) * carGapAngle;
+              const midCa = (ca + nextCa) / 2;
+              ctx.fillStyle = '#1e293b';
+              ctx.beginPath();
+              ctx.arc(cx + Math.cos(midCa) * r, cy + Math.sin(midCa) * r, carW * 0.34, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            drawTrainCar(ctx, tx, ty, ca, carW, carL, def.color, c === 0, isHyperBeam, nowSec);
+          }
+        }
+        ctx.restore();
+      }
+
+      // NEO-CENTRAL TERMINAL STATION (Center Hub with Platforms)
+      ctx.save();
+      const hubGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, stationOuterR);
+      hubGrad.addColorStop(0, '#1e3a8a');
+      hubGrad.addColorStop(0.65, '#0f172a');
+      hubGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = hubGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, stationOuterR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Station Platform Canopy Ring
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#38bdf8';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(cx, cy, stationOuterR, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Radial Boarding Gates around Station Perimeter
+      ctx.strokeStyle = 'rgba(125, 211, 252, 0.55)';
+      ctx.lineWidth = 1.5;
+      for (let g = 0; g < 8; g++) {
+        const ga = (g * Math.PI) / 4;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(ga) * (stationOuterR * 0.72), cy + Math.sin(ga) * (stationOuterR * 0.72));
+        ctx.lineTo(cx + Math.cos(ga) * (stationOuterR * 0.96), cy + Math.sin(ga) * (stationOuterR * 0.96));
+        ctx.stroke();
+      }
+
+      // Inner Station Concourse Ring & Clock Hands
+      ctx.strokeStyle = 'rgba(125, 211, 252, 0.45)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, stationOuterR * 0.62, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const secHand = (nowSec * Math.PI) / 30 - Math.PI / 2;
+      const minHand = (nowSec * Math.PI) / 1800 - Math.PI / 2;
+      ctx.strokeStyle = '#e0f2fe';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(secHand) * (stationOuterR * 0.5), cy + Math.sin(secHand) * (stationOuterR * 0.5));
+      ctx.stroke();
+
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(minHand) * (stationOuterR * 0.34), cy + Math.sin(minHand) * (stationOuterR * 0.34));
+      ctx.stroke();
+
+      if (stationOuterR >= 24) {
+        ctx.fillStyle = '#bae6fd';
+        ctx.font = `900 ${Math.max(7, Math.floor(stationOuterR * 0.21))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('CENTRAL', cx, cy + stationOuterR * 0.84);
+      }
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 9. DOM BUILD & UI SYNC
+    // =========================================================================
+    function buildStaticUI() {
+      const multBar = document.getElementById('ui-mult-bar');
+      multBar.innerHTML = '';
+      for (let i = 0; i < 11; i++) {
+        if (i > 0) {
+          const times = document.createElement('span');
+          times.className = 'text-[9px] text-slate-500 font-bold';
+          times.textContent = '×';
+          multBar.appendChild(times);
+        }
+        const badge = document.createElement('span');
+        badge.id = `mult-chip-${i}`;
+        badge.className = 'mono text-[10px] font-black px-1 rounded bg-slate-900/90 border border-slate-800';
+        badge.style.color = i < 10 ? LINE_DEFS[i].color : '#94a3b8';
+        badge.textContent = '1.00';
+        multBar.appendChild(badge);
+      }
+
+      const linesList = document.getElementById('ui-lines-list');
+      linesList.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const def = LINE_DEFS[i];
+        const row = document.createElement('div');
+        row.id = `line-card-${i}`;
+        row.className = 'line-card min-h-[38px]';
+        row.innerHTML = `
+          <button id="line-btn-${i}" onclick="buyLine(${i})"
+            class="line-btn w-full min-w-0 rounded-lg px-2 py-1 border text-left flex flex-col justify-center gap-0.5 relative overflow-hidden"
+            style="background: linear-gradient(135deg, rgba(10,18,36,0.96), rgba(4,8,20,0.98)); border-color: ${def.color}88; border-left: 3px solid ${def.color};">
+            <div class="flex items-center justify-between gap-1 leading-none min-w-0">
+              <div class="flex items-center gap-1 min-w-0 overflow-hidden">
+                <span class="font-black text-[11px] truncate" style="color: ${def.color};">${def.name}</span>
+                <span id="line-asc-badge-${i}" class="mono text-[9px] px-1 rounded bg-slate-950 text-slate-300 border border-slate-800 shrink-0">A:0</span>
+              </div>
+              <div class="mono text-[10px] font-black text-white shrink-0">
+                Lv.<span id="line-lv-${i}">0</span>/<span id="line-maxlv-${i}">100</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-1 text-[10px] leading-none min-w-0">
+              <div class="flex items-center gap-1.5 text-slate-300 mono min-w-0 truncate">
+                <span class="truncate">ゲイン:<strong id="line-gain-${i}" class="text-emerald-300">+0.01</strong></span>
+                <span class="truncate">速度:<strong id="line-spd-${i}" class="text-cyan-300">0.00/s</strong></span>
+              </div>
+              <div class="mono font-black text-amber-300 shrink-0 text-right max-w-[96px] truncate" id="line-cost-${i}">¥4.00</div>
+            </div>
+          </button>
+          <button id="line-asc-btn-${i}" onclick="ascendLine(${i})"
+            class="hidden w-9 shrink-0 rounded-lg bg-gradient-to-b from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-xs shadow border border-amber-200 flex flex-col items-center justify-center leading-none transition">
+            <span>A</span>
+            <span class="text-[8px] font-extrabold mt-0.5">複々線</span>
+          </button>
+        `;
+        linesList.appendChild(row);
+      }
+
+      const promoList = document.getElementById('ui-promo-list');
+      promoList.innerHTML = '';
+      for (const p of PROMO_DEFS) {
+        const btn = document.createElement('button');
+        btn.id = `promo-btn-${p.id}`;
+        btn.onclick = () => doPromote(p.id);
+        btn.className = 'w-full rounded-lg bg-slate-900/90 hover:bg-slate-800/90 border border-amber-500/30 p-2 text-left flex flex-col gap-0.5 transition';
+        btn.innerHTML = `
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-black text-amber-300">${p.title}</span>
+            <span id="promo-lv-cur-${p.id}" class="mono text-[10px] font-black text-slate-200">[Lv.0] 現在: ×1.00</span>
+          </div>
+          <div class="flex items-center justify-between gap-1 text-[10px]">
+            <span class="text-slate-400 truncate">${p.desc}</span>
+            <span id="promo-lv-next-${p.id}" class="mono font-bold text-emerald-400 shrink-0">[Lv.0] 次: ×1.00</span>
+          </div>
+          <div id="promo-exp-req-${p.id}" class="mono text-[9px] text-amber-200/80">Exp. 0 / 1 (+0)</div>
+        `;
+        promoList.appendChild(btn);
+      }
+
+      const infUpgList = document.getElementById('ui-inf-upgrades');
+      infUpgList.innerHTML = '';
+      for (const u of INF_UPG_DEFS) {
+        const btn = document.createElement('button');
+        btn.id = `inf-upg-btn-${u.id}`;
+        btn.onclick = () => buyInfinityUpgrade(u.id);
+        btn.className = 'w-full rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-indigo-500/30 p-2 text-left flex items-center justify-between gap-2 transition';
+        btn.innerHTML = `
+          <div class="min-w-0">
+            <div class="text-[11px] font-black text-indigo-200 truncate">${u.name} <span id="inf-upg-lv-${u.id}" class="mono text-[10px] text-cyan-300">Lv.0</span></div>
+            <div class="text-[9px] text-slate-400 truncate">${u.desc}</div>
+          </div>
+          <div id="inf-upg-cost-${u.id}" class="mono text-[10px] font-black text-fuchsia-300 bg-fuchsia-950/60 border border-fuchsia-500/40 px-2 py-1 rounded shrink-0">1 IP</div>
+        `;
+        infUpgList.appendChild(btn);
+      }
+
+      const icList = document.getElementById('ui-ic-list');
+      icList.innerHTML = '';
+      for (const ic of IC_DEFS) {
+        const card = document.createElement('div');
+        card.id = `ic-card-${ic.id}`;
+        card.className = 'rounded-lg bg-slate-900/90 border border-rose-500/30 p-2 flex flex-col gap-1';
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-1">
+            <span class="text-[11px] font-black text-rose-300">${ic.name}</span>
+            <button id="ic-btn-${ic.id}" onclick="startInfinityChallenge(${ic.id})" class="px-2 py-0.5 rounded bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-400/50 text-[10px] font-black shrink-0">
+              挑戦開始
+            </button>
+          </div>
+          <div class="text-[9px] text-slate-300">${ic.constraint}</div>
+          <div class="text-[9px] text-emerald-300">${ic.reward}</div>
+        `;
+        icList.appendChild(card);
+      }
+
+      const achList = document.getElementById('ui-ach-list');
+      achList.innerHTML = '';
+      for (const a of ACH_DEFS) {
+        const item = document.createElement('div');
+        item.id = `ach-card-${a.id}`;
+        item.className = 'rounded-lg bg-slate-900/70 border border-slate-800 px-2.5 py-1.5 flex items-center justify-between gap-2';
+        item.innerHTML = `
+          <div class="min-w-0">
+            <div class="text-[11px] font-black text-slate-300 truncate">#${a.id} ${a.name}</div>
+            <div class="text-[9px] text-slate-400 truncate">${a.desc}</div>
+            ${a.reward ? `<div class="text-[9px] text-amber-300 font-bold truncate">${a.reward}</div>` : ''}
+          </div>
+          <span id="ach-status-${a.id}" class="mono text-[9px] font-black px-1.5 py-0.5 rounded bg-slate-950 text-slate-500 border border-slate-800 shrink-0">未達成</span>
+        `;
+        achList.appendChild(item);
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('ui-score').textContent = formatYen(state.score);
+      document.getElementById('ui-header-inf').textContent = formatBN(state.infinities, 0);
+      document.getElementById('ui-header-ip').textContent = formatBN(state.ip, 0);
+
+      const capReached = !state.breakInfinity && state.score.gte(INFINITY_CAP);
+      document.getElementById('ui-cap-tag').classList.toggle('hidden', !capReached);
+      document.getElementById('ui-infinity-ready-banner').classList.toggle('hidden', !state.score.gte(INFINITY_CAP));
+      document.getElementById('ui-banner-ip').textContent = formatBN(getIPGainOnInfinity(), 0);
+
+      const logProgress = Math.max(0, Math.min(100, (Math.max(0, state.score.log10()) / 308.255) * 100));
+      document.getElementById('ui-inf-progress-bar').style.width = `${logProgress.toFixed(2)}%`;
+
+      for (let i = 0; i < 10; i++) {
+        document.getElementById(`mult-chip-${i}`).textContent = formatBN(state.lines[i].mult);
+      }
+      document.getElementById('mult-chip-10').textContent = formatBN(state.pMult);
+      document.getElementById('ui-common-exp').textContent = getCommonExponent().toFixed(2);
+      const payoutPerLap = getPayoutPerLap();
+      document.getElementById('ui-total-payout').textContent = formatYen(payoutPerLap);
+
+      let estRevPerSec = new BigNum(0, 0);
+      const unlocked = getUnlockedLineCount();
+      for (let i = 0; i < unlocked; i++) {
+        const spd = getLineLapSpeed(i);
+        if (spd > 0) estRevPerSec = estRevPerSec.add(payoutPerLap.mul(spd));
+      }
+      document.getElementById('ui-rev-rate').textContent = formatYen(estRevPerSec);
+      document.getElementById('ui-total-laps').textContent = Math.floor(state.totalLaps).toLocaleString();
+
+      const activeIcBadge = document.getElementById('ui-active-ic-badge');
+      if (state.activeIC > 0) {
+        activeIcBadge.classList.remove('hidden');
+        document.getElementById('ui-active-ic-name').textContent = `IC${state.activeIC} 挑戦中`;
+      } else {
+        activeIcBadge.classList.add('hidden');
+      }
+
+      document.getElementById('ui-unlocked-count').textContent = `${unlocked}/10`;
+      const buyAmtBtn = document.getElementById('btn-buy-amount');
+      if (state.achievements[4]) {
+        buyAmtBtn.classList.remove('hidden');
+        const m = BUY_MODES[state.buyAmountMode];
+        buyAmtBtn.textContent = `購入:${m === 'max' ? '最大' : m}`;
+      }
+
+      const buyAllUnlocked = state.cumScore.gte(new BigNum(1, 6)) || state.score.gte(new BigNum(1, 6));
+      const buyAllBtn = document.getElementById('btn-buy-all');
+      buyAllBtn.disabled = !buyAllUnlocked;
+      if (buyAllUnlocked) {
+        buyAllBtn.textContent = '全て購入';
+        buyAllBtn.className = 'px-2 py-1 rounded bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-200 border border-emerald-400/50 font-black text-[10px] transition';
+      }
+
+      const ascPower = getAscensionPower();
+      for (let i = 0; i < 10; i++) {
+        const line = state.lines[i];
+        const card = document.getElementById(`line-card-${i}`);
+        const btn = document.getElementById(`line-btn-${i}`);
+        const ascBtn = document.getElementById(`line-asc-btn-${i}`);
+
+        if (i >= unlocked) {
+          card.style.opacity = '0.38';
+          btn.disabled = true;
+          document.getElementById(`line-lv-${i}`).textContent = '0';
+          document.getElementById(`line-maxlv-${i}`).textContent = '100';
+          document.getElementById(`line-gain-${i}`).textContent = '未開通';
+          document.getElementById(`line-spd-${i}`).textContent = '--';
+          document.getElementById(`line-cost-${i}`).textContent = i === 4 && state.activeIC === 9 ? 'IC9制限' : '前路線Lv.5で開通';
+          ascBtn.classList.add('hidden');
+          continue;
+        }
+
+        card.style.opacity = '1';
+        const maxLv = getMaxLevel(i);
+        const canAscend = line.level >= maxLv && state.activeIC !== 8;
+        const info = getNextUpgradeInfo(i);
+        const canAfford = info.count > 0 && state.score.gte(info.cost);
+
+        document.getElementById(`line-asc-badge-${i}`).textContent = `A:${line.ascensions} (×${formatBN(Math.pow(ascPower, line.ascensions), 0)})`;
+        document.getElementById(`line-lv-${i}`).textContent = line.level;
+        document.getElementById(`line-maxlv-${i}`).textContent = maxLv;
+        document.getElementById(`line-gain-${i}`).textContent = `+${formatBN(getLineMultGain(i))}`;
+        document.getElementById(`line-spd-${i}`).textContent = `${getLineLapSpeed(i).toFixed(2)}/s`;
+
+        if (line.level >= maxLv) {
+          document.getElementById(`line-cost-${i}`).textContent = 'MAX LEVEL';
+          btn.disabled = true;
+          btn.style.filter = 'brightness(0.85)';
+        } else {
+          document.getElementById(`line-cost-${i}`).textContent = `${info.count > 1 ? `(+${info.count}) ` : ''}${formatYen(info.cost)}`;
+          btn.disabled = !canAfford;
+          btn.style.filter = canAfford ? 'brightness(1.08)' : 'brightness(0.68)';
+        }
+
+        ascBtn.classList.toggle('hidden', !canAscend);
+      }
+
+      document.getElementById('ui-prestige-count').textContent = state.prestigeCount;
+      document.getElementById('ui-pmult-cur').textContent = formatBN(state.pMult);
+      document.getElementById('ui-pexp-cur').textContent = state.pExp.toFixed(2);
+
+      const pot = getPotentialPrestige();
+      const presBtn = document.getElementById('btn-prestige');
+      if (!pot.unlocked) {
+        presBtn.disabled = true;
+        presBtn.className = 'w-full py-2 px-3 rounded-lg bg-slate-800/70 text-slate-500 border border-slate-700 font-black text-xs transition';
+        presBtn.textContent = `累計 1.00e10 で解放 (現在: ${formatYen(state.cumScore)})`;
+        document.getElementById('ui-pmult-next').textContent = '1.00';
+        document.getElementById('ui-pexp-next').textContent = '1.00';
+      } else {
+        presBtn.disabled = false;
+        presBtn.className = 'w-full py-2 px-3 rounded-lg bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white border border-sky-300/60 font-black text-xs shadow-lg transition';
+        presBtn.textContent = '自己破産を実行する (リセットして永続倍率獲得)';
+        document.getElementById('ui-pmult-next').textContent = formatBN(pot.pMult);
+        document.getElementById('ui-pexp-next').textContent = pot.pExp.toFixed(2);
+      }
+
+      const curExp = getCurrentPromoExp();
+      const promoUnlocked = state.pMult.gte(13319) || state.promoCount > 0;
+      document.getElementById('ui-promo-exp').textContent = curExp;
+      document.getElementById('ui-promo-exp-gain').textContent = curExp;
+      document.getElementById('ui-promo-count').textContent = state.promoCount;
+      document.getElementById('ui-promo-unlock-hint').textContent = promoUnlocked
+        ? (state.promoCount === 0 ? '初回は #1 を Lv.3以上 で実行可能' : '選択した能力を強化してリセット')
+        : 'P.倍率 ×13,319 (Exp 8) 到達で解放';
+
+      for (const p of PROMO_DEFS) {
+        const curLv = state.promoLevels[p.id];
+        const nextLv = getPromoTargetLevel(p.id, curExp);
+        const reqExp = Math.pow(2, curLv + 1);
+        const curEff = getEffectivePromoEffect(p.id);
+        const savedLv = state.promoLevels[p.id];
+        state.promoLevels[p.id] = Math.max(curLv + 1, nextLv);
+        const nextEff = getEffectivePromoEffect(p.id);
+        state.promoLevels[p.id] = savedLv;
+
+        const firstLock = state.promoCount === 0 && (p.id !== 0 || nextLv < 3);
+        const canPromo = promoUnlocked && nextLv > curLv && !firstLock;
+
+        const btn = document.getElementById(`promo-btn-${p.id}`);
+        btn.disabled = !canPromo;
+        btn.style.opacity = canPromo ? '1' : '0.52';
+        document.getElementById(`promo-lv-cur-${p.id}`).textContent = `[Lv.${curLv}] 現在: ×${curEff.toFixed(2)}`;
+        document.getElementById(`promo-lv-next-${p.id}`).textContent = `[Lv.${Math.max(curLv + 1, nextLv)}] 次: ×${nextEff.toFixed(2)}`;
+        document.getElementById(`promo-exp-req-${p.id}`).textContent = `Exp. ${curExp} / ${reqExp} (+${Math.max(0, nextLv - curLv)} Lv)`;
+      }
+
+      document.getElementById('ui-inf-count').textContent = formatBN(state.infinities, 0);
+      document.getElementById('ui-ip-amount').textContent = formatBN(state.ip, 0);
+      document.getElementById('ui-fastest-inf').textContent = state.fastestInfTime ? `${state.fastestInfTime.toFixed(2)}s` : '--';
+      const totalIcTime = getTotalICTime();
+      document.getElementById('ui-ic-total-time').textContent = totalIcTime > 0 ? `${totalIcTime.toFixed(1)}s` : '--';
+
+      const manInfBtn = document.getElementById('btn-manual-infinity');
+      const canInf = state.score.gte(INFINITY_CAP);
+      manInfBtn.disabled = !canInf;
+      manInfBtn.className = canInf
+        ? 'flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white border border-purple-300 font-black text-[11px] transition'
+        : 'flex-1 py-1.5 px-2 rounded-lg bg-purple-900/40 text-purple-300/50 border border-purple-500/30 font-black text-[11px] transition';
+      manInfBtn.textContent = canInf ? `インフィニティ (+${formatBN(getIPGainOnInfinity(), 0)} IP)` : '1.80e308 でインフィニティ';
+
+      const breakBtn = document.getElementById('btn-break-infinity');
+      const allIcDone = getAllICCompletedCount() >= 9;
+      breakBtn.disabled = !allIcDone;
+      if (!allIcDone) {
+        breakBtn.textContent = `ブレイク∞ (${getAllICCompletedCount()}/9 IC)`;
+      } else {
+        breakBtn.className = state.breakInfinity
+          ? 'py-1.5 px-2.5 rounded-lg bg-fuchsia-600 text-white border border-fuchsia-300 font-black text-[10px] transition'
+          : 'py-1.5 px-2.5 rounded-lg bg-slate-800 text-slate-200 border border-slate-600 font-black text-[10px] transition';
+        breakBtn.textContent = `ブレイク∞: ${state.breakInfinity ? 'ON' : 'OFF'}`;
+      }
+
+      for (const u of INF_UPG_DEFS) {
+        const lv = state.infUpgrades[u.id] || 0;
+        const cost = u.baseCost.mul(Math.pow(u.costMult, lv));
+        const btn = document.getElementById(`inf-upg-btn-${u.id}`);
+        const afford = state.ip.gte(cost);
+        btn.disabled = !afford;
+        btn.style.opacity = afford ? '1' : '0.55';
+        document.getElementById(`inf-upg-lv-${u.id}`).textContent = `Lv.${lv}`;
+        document.getElementById(`inf-upg-cost-${u.id}`).textContent = `${formatBN(cost, 0)} IP`;
+      }
+
+      document.getElementById('btn-exit-ic').classList.toggle('hidden', state.activeIC === 0);
+      for (const ic of IC_DEFS) {
+        const done = !!state.icCompleted[ic.id];
+        const active = state.activeIC === ic.id;
+        const btn = document.getElementById(`ic-btn-${ic.id}`);
+        if (active) {
+          btn.textContent = '挑戦中';
+          btn.className = 'px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[10px] shrink-0';
+        } else if (done) {
+          const bt = state.icBestTimes[ic.id];
+          btn.textContent = `クリア済${bt ? ` (${bt.toFixed(1)}s)` : ''}`;
+          btn.className = 'px-2 py-0.5 rounded bg-emerald-600/30 text-emerald-200 border border-emerald-400/50 font-black text-[10px] shrink-0';
+        } else {
+          btn.textContent = '挑戦開始';
+          btn.className = 'px-2 py-0.5 rounded bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-400/50 font-black text-[10px] shrink-0';
+        }
+      }
+
+      let achDone = 0;
+      for (const a of ACH_DEFS) {
+        const ok = !!state.achievements[a.id];
+        if (ok) achDone++;
+        const card = document.getElementById(`ach-card-${a.id}`);
+        const st = document.getElementById(`ach-status-${a.id}`);
+        if (ok) {
+          card.className = 'rounded-lg bg-amber-950/35 border border-amber-400/50 px-2.5 py-1.5 flex items-center justify-between gap-2';
+          st.className = 'mono text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 shrink-0';
+          st.textContent = '達成済';
+        }
+      }
+      document.getElementById('ui-ach-count').textContent = `${achDone}/28`;
+      document.getElementById('ui-ach-summary').textContent = `${achDone} / 28`;
+
+      document.getElementById('btn-notation').textContent = state.notation === 'standard'
+        ? '標準表記 (T, Qa, Vg...)'
+        : '指数表記 (1.00e12...)';
+      const hrs = Math.floor(state.playTime / 3600);
+      const mins = Math.floor((state.playTime % 3600) / 60);
+      const secs = Math.floor(state.playTime % 60);
+      document.getElementById('stat-playtime').textContent = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      document.getElementById('stat-cumscore').textContent = formatYen(state.infCumScore);
+      document.getElementById('stat-totallaps').textContent = Math.floor(state.totalLaps).toLocaleString();
+      document.getElementById('stat-prestiges').textContent = state.prestigeCount;
+      document.getElementById('stat-promos').textContent = state.promoCount;
+      document.getElementById('stat-infs').textContent = formatBN(state.infinities, 0);
+
+      if (state.devUnlocked) {
+        document.getElementById('dev-panel').classList.remove('hidden');
+        document.getElementById('dev-panel').classList.add('flex');
+        document.getElementById('dev-speed-label').textContent = `×${state.devSpeed}`;
+      }
+    }
+
+    // =========================================================================
+    // 10. TABS, SETTINGS, DEV MODE, SAVE/LOAD & TOASTS
+    // =========================================================================
+    function switchTab(tab) {
+      for (const name of ['ops', 'inf', 'ach', 'sys']) {
+        const pane = document.getElementById(`tab-content-${name}`);
+        const btn = document.getElementById(`tab-btn-${name}`);
+        if (name === tab) {
+          pane.classList.remove('hidden');
+          btn.className = 'tab-btn px-2 py-1 rounded text-[10px] font-black transition bg-cyan-500/20 text-cyan-300 border border-cyan-400/50';
+        } else {
+          pane.classList.add('hidden');
+          btn.className = 'tab-btn px-2 py-1 rounded text-[10px] font-black transition text-slate-400 hover:text-white border border-transparent';
+        }
+      }
+    }
+
+    function toggleNotation() {
+      state.notation = state.notation === 'standard' ? 'scientific' : 'standard';
+    }
+
+    function checkDevCode() {
+      const inp = document.getElementById('dev-code-input');
+      if (inp.value.trim() === '02884') {
+        state.devUnlocked = true;
+        inp.value = '';
+        showToast('開発者モード (02884) が解放されました！', 'fuchsia');
+      } else {
+        showToast('アクセスコードが一致しません', 'rose');
+      }
+    }
+
+    function setDevSpeed(spd) {
+      if (!state.devUnlocked) return;
+      state.devSpeed = spd;
+    }
+
+    function devAddMoney(expAdd) {
+      if (!state.devUnlocked) return;
+      addScore(state.score.mul(BigNum.fromExp10(expAdd)));
+    }
+
+    function devSetInfinity() {
+      if (!state.devUnlocked) return;
+      state.score = INFINITY_CAP.clone();
+      state.cumScore = INFINITY_CAP.clone();
+    }
+
+    function devAddIP(amt) {
+      if (!state.devUnlocked) return;
+      state.ip = state.ip.add(amt);
+      state.infinities = state.infinities.add(1);
+    }
+
+    function showToast(msg, color = 'cyan') {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = `rounded-lg bg-slate-950/95 border border-${color}-400/60 px-3 py-2 text-[11px] font-black text-${color}-200 shadow-lg backdrop-blur-sm transition-opacity duration-300`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 320);
+      }, 2800);
+    }
+
+    const SAVE_KEY = 'loop_line_tycoon_inf_save_v4';
+
+    function saveGame() {
+      try {
+        const payload = {
+          score: [state.score.m, state.score.e],
+          cumScore: [state.cumScore.m, state.cumScore.e],
+          infCumScore: [state.infCumScore.m, state.infCumScore.e],
+          lines: state.lines.map(l => ({
+            level: l.level,
+            ascensions: l.ascensions,
+            progress: l.progress,
+            mult: [l.mult.m, l.mult.e],
+            laps: l.laps
+          })),
+          pMult: [state.pMult.m, state.pMult.e],
+          pExp: state.pExp,
+          prestigeCount: state.prestigeCount,
+          promoLevels: state.promoLevels,
+          promoCount: state.promoCount,
+          everPrestigedThisPromo: state.everPrestigedThisPromo,
+          everAscendedThisPromo: state.everAscendedThisPromo,
+          infinities: [state.infinities.m, state.infinities.e],
+          ip: [state.ip.m, state.ip.e],
+          infUpgrades: state.infUpgrades,
+          fastestInfTime: state.fastestInfTime,
+          infRunTime: state.infRunTime,
+          activeIC: state.activeIC,
+          icCompleted: state.icCompleted,
+          icBestTimes: state.icBestTimes,
+          breakInfinity: state.breakInfinity,
+          achievements: state.achievements,
+          buyAmountMode: state.buyAmountMode,
+          notation: state.notation,
+          playTime: state.playTime,
+          totalLaps: state.totalLaps,
+          devUnlocked: state.devUnlocked
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        // Ignore storage errors in restricted environments
+      }
+    }
+
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        if (!d || !Array.isArray(d.lines) || d.lines.length !== 10) return;
+
+        state.score = new BigNum(d.score[0], d.score[1]);
+        state.cumScore = new BigNum(d.cumScore[0], d.cumScore[1]);
+        state.infCumScore = new BigNum(d.infCumScore[0], d.infCumScore[1]);
+        state.lines = d.lines.map((l, idx) => ({
+          level: Number(l.level) || (idx === 0 ? 1 : 0),
+          ascensions: Number(l.ascensions) || 0,
+          progress: Number(l.progress) || 0,
+          mult: new BigNum(l.mult[0], l.mult[1]),
+          laps: Number(l.laps) || 0
+        }));
+        if (state.lines[0].level <= 0 && state.lines[0].ascensions === 0) {
+          state.lines[0].level = 1;
+        }
+        state.pMult = new BigNum(d.pMult[0], d.pMult[1]);
+        state.pExp = Number(d.pExp) || 1.00;
+        state.prestigeCount = Number(d.prestigeCount) || 0;
+        state.promoLevels = Array.isArray(d.promoLevels) ? d.promoLevels : [0, 0, 0, 0];
+        state.promoCount = Number(d.promoCount) || 0;
+        state.everPrestigedThisPromo = !!d.everPrestigedThisPromo;
+        state.everAscendedThisPromo = !!d.everAscendedThisPromo;
+        state.infinities = new BigNum(d.infinities[0], d.infinities[1]);
+        state.ip = new BigNum(d.ip[0], d.ip[1]);
+        state.infUpgrades = Object.assign({ iu1: 0, iu2: 0, iu3: 0, iu4: 0, iu5: 0 }, d.infUpgrades || {});
+        state.fastestInfTime = d.fastestInfTime || null;
+        state.infRunTime = Number(d.infRunTime) || 0;
+        state.activeIC = Number(d.activeIC) || 0;
+        state.icCompleted = d.icCompleted || {};
+        state.icBestTimes = d.icBestTimes || {};
+        state.breakInfinity = !!d.breakInfinity;
+        state.achievements = d.achievements || {};
+        state.buyAmountMode = Number(d.buyAmountMode) || 0;
+        state.notation = d.notation === 'scientific' ? 'scientific' : 'standard';
+        state.playTime = Number(d.playTime) || 0;
+        state.totalLaps = Number(d.totalLaps) || 0;
+        state.devUnlocked = !!d.devUnlocked;
+      } catch (e) {
+        state = createInitialState();
+      }
+    }
+
+    function manualSave() {
+      saveGame();
+      showToast('運行データをセーブしました！', 'emerald');
+    }
+
+    function openResetModal() {
+      document.getElementById('reset-modal').classList.remove('hidden');
+    }
+
+    function closeResetModal() {
+      document.getElementById('reset-modal').classList.add('hidden');
+    }
+
+    function executeHardReset() {
+      localStorage.removeItem(SAVE_KEY);
+      state = createInitialState();
+      closeResetModal();
+      showToast('データを初期化しました (赤線 Lv.1 運行開始)', 'rose');
+    }
+
+    // =========================================================================
+    // 11. MAIN ANIMATION & SIMULATION LOOP
+    // =========================================================================
+    let lastTime = performance.now();
+    let autoSaveTimer = 0;
+
+    function mainLoop(now) {
+      const dt = Math.min(0.25, Math.max(0, (now - lastTime) / 1000));
+      lastTime = now;
+
+      tickSimulation(dt);
+      resizeCanvas();
+      renderRailwayCanvas(now / 1000);
+      updateUI();
+
+      autoSaveTimer += dt;
+      if (autoSaveTimer >= 10) {
+        autoSaveTimer = 0;
+        saveGame();
+      }
+
+      requestAnimationFrame(mainLoop);
+    }
+
+    window.onload = function () {
+      loadGame();
+      buildStaticUI();
+      resizeCanvas();
+      updateUI();
+      lastTime = performance.now();
+      requestAnimationFrame(mainLoop);
+    };
+  </script>
+</body>
+</html>
